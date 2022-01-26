@@ -3,11 +3,8 @@ const app = express();
 const bodyParser = require('body-parser');
 const mysql = require('promise-mysql')
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 
 const config = require('./config');
-const {secret} = require("./config");
 
 const pool = mysql.createPool(config.pool);
 
@@ -21,8 +18,11 @@ app.use(function (req, res, next) {
     next();
 });
 
-const apiRouter = require('./app/routes/api')(express, pool, jwt);
+const apiRouter = require('./app/routes/api')(express, pool);
 app.use('/api', apiRouter);
+
+const authRouter = require('./app/routes/authenticate')(express,pool);
+app.use('/authenticate', authRouter);
 
 app.listen(8081);
 

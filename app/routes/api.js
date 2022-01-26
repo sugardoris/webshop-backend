@@ -1,5 +1,4 @@
-const {RowDataPacket} = require("mysql/lib/protocol/packets");
-module.exports = function (express, pool, jwt, secret) {
+module.exports = function (express, pool) {
 
     const apiRouter = express.Router();
 
@@ -12,11 +11,11 @@ module.exports = function (express, pool, jwt, secret) {
             let conn = await pool.getConnection();
             let rows = await conn.query('SELECT * FROM users');
             conn.release();
-            res.json({ status: 'OK', users:rows});
+            res.json({ status: '200', users:rows});
 
         } catch (e) {
             console.log(e);
-            return res.json({"code" : 100, "status" : "Error with query"});
+            return res.json({status: '500', error : "Error with query"});
         }
     }).post(async function(req, res) {
         const user = {
@@ -29,10 +28,10 @@ module.exports = function (express, pool, jwt, secret) {
             let conn = await pool.getConnection();
             let q = await conn.query('INSERT INTO users SET ?', user);
             conn.release();
-            res.json({ status: 'OK', insertId:q.insertId });
+            res.json({ status: '200', insertId:q.insertId });
         } catch (e){
             console.log(e);
-            res.json({ status: 'NOT OK' });
+            res.json({ status: '404' });
         }
     });
 
@@ -41,20 +40,20 @@ module.exports = function (express, pool, jwt, secret) {
             let conn = await pool.getConnection();
             let rows = await conn.query('SELECT * FROM users WHERE id=?', req.params.id);
             conn.release();
-            res.json({ status: 'OK', user:rows[0]});
+            res.json({ status: '200', user:rows[0]});
 
         } catch (e){
             console.log(e);
-            return res.json({"code" : 100, "status" : "Error with query"});
+            return res.json({status: '500', error : "Error with query"});
         }
     }).delete(async function(req,res){
         try {
             let conn = await pool.getConnection();
             let q = await conn.query('DELETE FROM users WHERE id = ?', req.params.id);
             conn.release();
-            res.json({ status: 'OK', affectedRows :q.affectedRows });
+            res.json({ status: '200', affectedRows :q.affectedRows });
         } catch (e){
-            res.json({ status: 'NOT OK' });
+            res.json({ status: '404' });
         }
     });
 
@@ -107,7 +106,7 @@ module.exports = function (express, pool, jwt, secret) {
 
         } catch (e) {
             console.log(e);
-            return res.json({"code" : 100, "status" : "Error with query"});
+            return res.json({status: '500', error : "Error with query"});
         }
     }).post(async function(req, res) {
 
@@ -140,10 +139,10 @@ module.exports = function (express, pool, jwt, secret) {
             let insertInfo = await conn.query('INSERT INTO information SET ?', information);
 
             conn.release();
-            res.json({ status: 'OK', insertId:insertListing.insertId });
+            res.json({ status: '200', insertId:insertListing.insertId });
         } catch (e){
             console.log(e);
-            res.json({ status: 'NOT OK' });
+            res.json({ status: '404' });
         }
     });
 
@@ -187,11 +186,11 @@ module.exports = function (express, pool, jwt, secret) {
             listing.inStock = rowsListings[0].inStock;
             listing.imageUrl = rowsListings[0].imageUrl;
 
-            res.json({ status: 'OK', listing:listing});
+            res.json({ status: '200', listing:listing});
 
         } catch (e) {
             console.log(e);
-            return res.json({"code" : 100, "status" : "Error with query"});
+            return res.json({status: '500', error : "Error with query"});
         }
     }).put(async function(req, res) {
 
@@ -225,10 +224,10 @@ module.exports = function (express, pool, jwt, secret) {
 
             conn.release();
 
-            res.json({ status: 'OK', changedRows:updateListing.changedRows });
+            res.json({ status: '200', changedRows:updateListing.changedRows });
         } catch (e){
             console.log(e);
-            res.json({ status: 'NOT OK' });
+            res.json({ status: '404' });
         }
 
     }).delete(async function(req,res){
@@ -241,10 +240,10 @@ module.exports = function (express, pool, jwt, secret) {
 
             conn.release();
 
-            res.json({ status: 'OK', affectedRows:deleteListing.affectedRows });
+            res.json({ status: '200', affectedRows:deleteListing.affectedRows });
 
         } catch (e){
-            res.json({ status: 'NOT OK' });
+            res.json({ status: '404' });
         }
 
     });
