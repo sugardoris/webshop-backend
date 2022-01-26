@@ -59,30 +59,34 @@ module.exports = function (express, pool) {
 
     apiRouter.route('/listings').get(async function(req, res) {
 
-        const listings = [];
-        const information = {
-            description: '',
-            materials: '',
-            height: 0,
-            width: 0,
-            depth: 0
-        }
-        const listing = {
-            title: '',
-            info: information,
-            price: 0,
-            category: '',
-            imageUrl: '',
-            inStock: 0
-        }
+        let listings = [];
 
         try {
             let conn = await pool.getConnection();
             let rowsListings = await conn.query('SELECT * FROM listings');
             conn.release();
-            console.log(rowsListings);
+            console.log(rowsListings.length);
 
-            for (let i = 0; i < rowsListings.length; i++) {
+            for (let i = 0; i < rowsListings.length; ++i) {
+
+                let information = {
+                    description: '',
+                    materials: '',
+                    height: 0,
+                    width: 0,
+                    depth: 0
+                }
+
+                let listing = {
+                    id: 0,
+                    title: '',
+                    info: information,
+                    price: 0,
+                    category: '',
+                    imageUrl: '',
+                    inStock: 0,
+                    inCart: 0
+                }
 
                 let rowInfo = await conn.query('SELECT * FROM information WHERE listingId =?', rowsListings[i].id);
                 information.description = rowInfo[0].description;
@@ -94,6 +98,7 @@ module.exports = function (express, pool) {
                 let categoryName = await conn.query('SELECT name FROM categories WHERE id=?', rowsListings[i].categoryId);
                 listing.category = categoryName[0].name;
 
+                listing.id = rowsListings[i].id;
                 listing.title = rowsListings[i].title;
                 listing.info = information;
                 listing.price = rowsListings[i].price;
@@ -101,8 +106,9 @@ module.exports = function (express, pool) {
                 listing.imageUrl = rowsListings[i].imageUrl;
 
                 listings.push(listing);
+                console.log(listings);
             }
-            res.json({ status: 'OK', listings:listings});
+            res.json(listings);
 
         } catch (e) {
             console.log(e);
