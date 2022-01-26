@@ -4,7 +4,7 @@ module.exports = function (express, pool, jwt, secret) {
     const apiRouter = express.Router();
 
     apiRouter.get('/', function(req, res) {
-        res.json({ message: 'Dobro dosli na nas API!' });
+        res.json({ message: 'Hello world!' });
     });
 
     apiRouter.route('/users').get(async function(req, res) {
@@ -145,6 +145,108 @@ module.exports = function (express, pool, jwt, secret) {
             console.log(e);
             res.json({ status: 'NOT OK' });
         }
+    });
+
+    apiRouter.route('/listings/:id').get(async function(req, res) {
+
+        const information = {
+            description: '',
+            materials: '',
+            height: 0,
+            width: 0,
+            depth: 0
+        }
+        const listing = {
+            title: '',
+            info: information,
+            price: 0,
+            category: '',
+            imageUrl: '',
+            inStock: 0
+        }
+
+        try {
+            let conn = await pool.getConnection();
+            let rowsListings = await conn.query('SELECT * FROM listings WHERE id=?', req.params.id);
+            conn.release();
+            console.log(rowsListings);
+
+            let rowInfo = await conn.query('SELECT * FROM information WHERE listingId =?', req.params.id);
+            information.description = rowInfo[0].description;
+            information.materials = rowInfo[0].materials;
+            information.width = rowInfo[0].width;
+            information.height = rowInfo[0].height;
+            information.depth = rowInfo[0].depth;
+
+            let categoryName = await conn.query('SELECT name FROM categories WHERE id=?', rowsListings[0].categoryId);
+            listing.category = categoryName[0].name;
+
+            listing.title = rowsListings[0].title;
+            listing.info = information;
+            listing.price = rowsListings[0].price;
+            listing.inStock = rowsListings[0].inStock;
+            listing.imageUrl = rowsListings[0].imageUrl;
+
+            res.json({ status: 'OK', listing:listing});
+
+        } catch (e) {
+            console.log(e);
+            return res.json({"code" : 100, "status" : "Error with query"});
+        }
+    }).put(async function(req, res) {
+
+        const information = {
+            listingId: req.params.id,
+            description: req.body.info['description'],
+            materials: req.body.info['materials'],
+            height: req.body.info['height'],
+            width: req.body.info['width'],
+            depth: req.body.info['depth']
+        }
+
+        const listing = {
+            title: req.body.title,
+            price: req.body.price,
+            inStock: req.body.inStock,
+            thumbImgUrl: req.body.imageUrl,
+            imageUrl: req.body.imageUrl,
+            categoryId: 0
+        }
+
+        try {
+            let conn = await pool.getConnection();
+
+            let id = await conn.query('SELECT id FROM categories WHERE name=?', req.body.category);
+            listing.categoryId = id[0].id;
+
+            let updateListing = await conn.query('UPDATE listings SET ? WHERE id = ?', [listing, req.params.id]);
+
+            let updateInfo = await conn.query('UPDATE information SET ? WHERE listingId = ?', [information, req.params.id]);
+
+            conn.release();
+
+            res.json({ status: 'OK', changedRows:updateListing.changedRows });
+        } catch (e){
+            console.log(e);
+            res.json({ status: 'NOT OK' });
+        }
+
+    }).delete(async function(req,res){
+
+        try {
+            let conn = await pool.getConnection();
+
+            let deleteListingInfo = await conn.query('DELETE FROM information WHERE listingId = ?', req.params.id);
+            let deleteListing = await conn.query('DELETE FROM listings WHERE id = ?', req.params.id);
+
+            conn.release();
+
+            res.json({ status: 'OK', affectedRows:deleteListing.affectedRows });
+
+        } catch (e){
+            res.json({ status: 'NOT OK' });
+        }
+
     });
 
     return apiRouter;
