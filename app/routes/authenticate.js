@@ -6,17 +6,32 @@ module.exports=function(express, pool){
     authRouter.post('/', async function(req,res){
 
         try {
+            let compare = false;
             let conn = await pool.getConnection();
             let rows = await conn.query('SELECT * FROM users WHERE email=?', req.body.email);
             conn.release();
 
-            if (rows.length > 0 && rows[0].password === req.body.password){
-                res.json({ status: '200', user:rows[0]});
-            } else if (rows.length > 0){
-                res.json({ status: '403', description:'Wrong password' });
-            } else {
-                res.json({ status: '403', description:"User with this email doesn't exist" });
+            if (rows.length === 0) {
+                res.status(404).send({error: 'User with this email doesn\'t exist'});
             }
+            if (rows.length > 0 && rows[0].salt) {
+                let hash = crypto.pbkdf2Sync(req.body.password, rows[0].salt, 10000, 64, 'sha512');
+                compare = hash.toString('hex') == rows[0].password;
+
+                if (compare) {
+                    res.json(rows[0]);
+                }
+                else {
+                    res.status(403).send({error: 'Wrong password'});
+                }
+            }
+            else if(rows.length > 0 && rows[0].password === req.body.password) {
+                res.json(rows[0]);
+            }
+            else if (rows.length > 0){
+                res.status(403).send({error: 'Wrong password'});
+            }
+
         } catch (e){
             console.log(e);
             return res.json({"code" : 100, "status" : "Error with query"});

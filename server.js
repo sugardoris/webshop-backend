@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const mysql = require('promise-mysql')
 const path = require('path');
+const crypto = require('crypto');
 
 const config = require('./config');
 
@@ -18,7 +19,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-const apiRouter = require('./app/routes/api')(express, pool);
+const apiRouter = require('./app/routes/api')(express, pool, crypto);
 app.use('/api', apiRouter);
 
 const authRouter = require('./app/routes/authenticate')(express,pool);

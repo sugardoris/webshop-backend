@@ -1,4 +1,4 @@
-module.exports = function (express, pool) {
+module.exports = function (express, pool, crypto) {
 
     const apiRouter = express.Router();
 
@@ -9,18 +9,22 @@ module.exports = function (express, pool) {
     apiRouter.route('/users').get(async function(req, res) {
         try {
             let conn = await pool.getConnection();
-            let rows = await conn.query('SELECT * FROM users');
+            let users = await conn.query('SELECT * FROM users');
             conn.release();
-            res.json({ status: '200', users:rows});
+            res.json(users);
 
         } catch (e) {
             console.log(e);
             return res.json({status: '500', error : "Error with query"});
         }
     }).post(async function(req, res) {
+
+        let salt = crypto.randomBytes(128).toString('base64');
+        let hash = crypto.pbkdf2Sync(req.body.password, salt, 10000, 64, 'sha512');
+
         const user = {
             email : req.body.email,
-            password : req.body.password,
+            password : hash,
             role : req.body.role
         };
 
@@ -38,9 +42,9 @@ module.exports = function (express, pool) {
     apiRouter.route('/users/:id').get(async function(req,res){
         try {
             let conn = await pool.getConnection();
-            let rows = await conn.query('SELECT * FROM users WHERE id=?', req.params.id);
+            let users = await conn.query('SELECT * FROM users WHERE id=?', req.params.id);
             conn.release();
-            res.json({ status: '200', user:rows[0]});
+            res.json(users[0]);
 
         } catch (e){
             console.log(e);
@@ -162,6 +166,7 @@ module.exports = function (express, pool) {
             depth: 0
         }
         const listing = {
+            id: req.params.id,
             title: '',
             info: information,
             price: 0,
@@ -192,7 +197,7 @@ module.exports = function (express, pool) {
             listing.inStock = rowsListings[0].inStock;
             listing.imageUrl = rowsListings[0].imageUrl;
 
-            res.json({ status: '200', listing:listing});
+            res.json(listing);
 
         } catch (e) {
             console.log(e);
