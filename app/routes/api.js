@@ -76,6 +76,7 @@ module.exports = function (express, pool, crypto) {
                     info: information,
                     price: 0,
                     category: '',
+                    thumbImgUrl: '',
                     imageUrl: '',
                     inStock: 0,
                     inCart: 0
@@ -96,6 +97,7 @@ module.exports = function (express, pool, crypto) {
                 listing.info = information;
                 listing.price = rowsListings[i].price;
                 listing.inStock = rowsListings[i].inStock;
+                listing.thumbImgUrl = rowsListings[i].thumbImgUrl;
                 listing.imageUrl = rowsListings[i].imageUrl;
 
                 listings.push(listing);
@@ -121,7 +123,7 @@ module.exports = function (express, pool, crypto) {
             title: req.body.title,
             price: req.body.price,
             inStock: req.body.inStock,
-            thumbImgUrl: req.body.imageUrl,
+            thumbImgUrl: req.body.thumbImgUrl,
             imageUrl: req.body.imageUrl,
             categoryId: 0
         }
@@ -205,7 +207,7 @@ module.exports = function (express, pool, crypto) {
             title: req.body.title,
             price: req.body.price,
             inStock: req.body.inStock,
-            thumbImgUrl: req.body.imageUrl,
+            thumbImgUrl: req.body.thumbImgUrl,
             imageUrl: req.body.imageUrl,
             categoryId: 0
         }
