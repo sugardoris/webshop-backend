@@ -12,6 +12,8 @@ const pool = mysql.createPool(config.pool);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
+app.use(express.static(__dirname+'/public/app'));
+
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -24,6 +26,10 @@ app.use('/api', apiRouter);
 
 const authRouter = require('./app/routes/authenticate')(express,pool, crypto);
 app.use('/authenticate', authRouter);
+
+app.get('*', function(req, res) {
+    res.sendFile(path.join(__dirname + '/public/app/index.html'));
+});
 
 app.listen(8081);
 
