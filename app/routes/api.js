@@ -6,26 +6,16 @@ module.exports = function (express, pool, crypto) {
         res.json({ message: 'Hello world!' });
     });
 
-    apiRouter.route('/users').get(async function(req, res) {
-        try {
-            let conn = await pool.getConnection();
-            let users = await conn.query('SELECT * FROM users');
-            conn.release();
-            res.json(users);
-
-        } catch (e) {
-            console.log(e);
-            return res.json({status: '500', error : "Error with query"});
-        }
-    }).post(async function(req, res) {
+    apiRouter.route('/users').post(async function(req, res) {
 
         let salt = crypto.randomBytes(128).toString('base64');
-        let hash = crypto.pbkdf2Sync(req.body.password, salt, 10000, 64, 'sha512');
+        let hash = crypto.pbkdf2Sync(req.body.password, salt, 10000, 64, 'sha512').toString('hex');
 
         const user = {
             email : req.body.email,
             password : hash,
-            role : req.body.role
+            role : req.body.role,
+            salt: salt
         };
 
         try {
@@ -69,7 +59,6 @@ module.exports = function (express, pool, crypto) {
             let conn = await pool.getConnection();
             let rowsListings = await conn.query('SELECT * FROM listings');
             conn.release();
-            console.log(rowsListings.length);
 
             for (let i = 0; i < rowsListings.length; ++i) {
 
@@ -110,7 +99,6 @@ module.exports = function (express, pool, crypto) {
                 listing.imageUrl = rowsListings[i].imageUrl;
 
                 listings.push(listing);
-                console.log(listings);
             }
             res.json(listings);
 
@@ -179,7 +167,6 @@ module.exports = function (express, pool, crypto) {
             let conn = await pool.getConnection();
             let rowsListings = await conn.query('SELECT * FROM listings WHERE id=?', req.params.id);
             conn.release();
-            console.log(rowsListings);
 
             let rowInfo = await conn.query('SELECT * FROM information WHERE listingId =?', req.params.id);
             information.description = rowInfo[0].description;

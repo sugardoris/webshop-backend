@@ -22,7 +22,7 @@ app.use(function (req, res, next) {
 const apiRouter = require('./app/routes/api')(express, pool, crypto);
 app.use('/api', apiRouter);
 
-const authRouter = require('./app/routes/authenticate')(express,pool);
+const authRouter = require('./app/routes/authenticate')(express,pool, crypto);
 app.use('/authenticate', authRouter);
 
 app.listen(8081);

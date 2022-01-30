@@ -1,12 +1,11 @@
 
-module.exports=function(express, pool){
+module.exports=function(express, pool, crypto){
 
     let authRouter = express.Router();
 
     authRouter.post('/', async function(req,res){
 
         try {
-            let compare = false;
             let conn = await pool.getConnection();
             let rows = await conn.query('SELECT * FROM users WHERE email=?', req.body.email);
             conn.release();
@@ -16,9 +15,8 @@ module.exports=function(express, pool){
             }
             if (rows.length > 0 && rows[0].salt) {
                 let hash = crypto.pbkdf2Sync(req.body.password, rows[0].salt, 10000, 64, 'sha512');
-                compare = hash.toString('hex') == rows[0].password;
 
-                if (compare) {
+                if (hash.toString('hex') === rows[0].password) {
                     res.json(rows[0]);
                 }
                 else {
