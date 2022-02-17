@@ -161,6 +161,7 @@ module.exports = function (express, pool, crypto) {
             info: information,
             price: 0,
             category: '',
+            thumbImgUrl: '',
             imageUrl: '',
             inStock: 0
         }
@@ -184,6 +185,7 @@ module.exports = function (express, pool, crypto) {
             listing.info = information;
             listing.price = rowsListings[0].price;
             listing.inStock = rowsListings[0].inStock;
+            listing.thumbImgUrl = rowsListings[0].thumbImgUrl;
             listing.imageUrl = rowsListings[0].imageUrl;
 
             res.json(listing);
